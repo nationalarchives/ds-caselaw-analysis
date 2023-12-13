@@ -1,39 +1,40 @@
-# Introduction
-This repository is a [template repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/creating-a-repository-from-a-template).
+# Find Case Law Analysis / Data Science repo
 
-When you want to create a new DA repository, you should do so by using this template.  Hint: click the green button above that says "Use this template".
+This contains various utilities for analysis and evaluation of the search functionality.
 
-# Why
-We want to ensure that all repositories in DA follow defined conventions and standards. See [The Engineering Handbook](https://national-archives.atlassian.net/wiki/spaces/DAAE/pages/47775767/Engineering+Handbook).
+To get started, first install pre-commit (this needs to be outside your virtualenv):
 
-Specifically, this mandates that all repositories implement at least these minimal set of [pre-commit](https://pre-commit.com/) hooks and a pre-commit check.  Update these as you see fit - if you need to.
+> pip install pre-commit jupyter
+> pre-commit install
 
-It is therefore required that you use [pre-commit](https://pre-commit.com/) and the [detect secrets](https://github.com/Yelp/detect-secrets) tool/hook.
+This is important, as we use a pre-commit hook to strip the output from our ipython notebooks - given some of the data we work with here is sensitive, we absolutely do not want it leaking into the git repository.
 
-They can generally be installed with pip. e.g.
+**Ensure all your data files are kept within the gitignored `tmp/` or `data/`, and your notebook output is properly sanitised before commiting anything!
 
-```
-pip install pre-commit
-pip install detect-secrets
-```
+Then set up a virtualenv and install the dependencies:
 
-You will need to initialise pre-commit after cloning the newly created repository by running:
+> virtualenv venv
+> . venv/bin/activate
+> pip install -r requirements.txt
 
-```pre-commit install```
+Finally, run jupyter:
 
-# Contents
-```README.md``` - Change this as appropriate.
+> jupyter notebook
 
-```CHANGELOG.md``` - A [Keep a change log](https://keepachangelog.com/en/1.0.0/) changelog.
+# Getting data to work with
 
-```LICENSE``` - A MIT License dated 2023 Crown Copyright.
+Now you'll need some data to work with. Ask one of the dxw folks for a sample of the cloudfront logs - they will give you a folder full of .gz compressed log files which you can place within `data/`
 
-```.pre-commit-config.yaml``` - Sensible defaults to get you started.  Add the hooks you need accordingly.
+First, pre-process these to create one log file:
 
-```.secrets.baseline``` - A baseline file for detect-secrets that assumes there should be no secrets in this repository.
+./scripts/concatenate_cloudfront_logs.sh DIRECTORY_CONTAINING_LOGS data/cloudfront_logs_concatenated.log
 
-```.github/workflows/pre_commit.yml``` - A workflow which runs pre-commit on a pull request to main, as a check.
+Then extract the search queries and results from these logs:
+python ./scripts/make_search_sessions.py data/cloudfront_logs_concatenated.log data/searches_nov_23.json
 
-# Protect Main Branch
-Creating a repo from the template will not set branch protection.
-See [The Engineering Handbook](https://national-archives.atlassian.net/wiki/spaces/DAAE/pages/47775767/Engineering+Handbook) for guidance.
+You can then delete the folder of gzipped logs and `data/cloudfront_logs_concatenated.log`.
+
+# Reproducing the search evaluation.
+
+You'll need first to step through the notebook `Parse cloudfront logs`, following the instructions, and then the notebook `Relevance metrics`.
+
